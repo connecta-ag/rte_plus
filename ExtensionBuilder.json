@@ -1,0 +1,37 @@
+{
+    "modules": [],
+    "properties": {
+        "backendModules": [],
+        "description": "Adds features like \"track changes\" to rtehtmlarea (working with <del> and <ins> tags including timestamps)",
+        "emConf": {
+            "category": "fe",
+            "custom_category": "",
+            "dependsOn": "typo3 => 6.2.0-6.2.99\n",
+            "disableLocalization": false,
+            "disableVersioning": false,
+            "skipGenerateDocumentationTemplate": false,
+            "sourceLanguage": "en",
+            "state": "alpha",
+            "version": "0.0.1"
+        },
+        "extensionKey": "rte_plus",
+        "name": "Additional RTE Features",
+        "originalExtensionKey": "",
+        "persons": [
+            {
+                "company": "Connecta AG",
+                "email": "j.rieger@connecta.ag",
+                "name": "Jochen Rieger",
+                "role": "Developer"
+            }
+        ],
+        "plugins": [],
+        "vendorName": "CAG"
+    },
+    "wires": [],
+    "log": {
+        "last_modified": "2016-04-28 07:37",
+        "extension_builder_version": "6.2",
+        "be_user": "Jochen Rieger (64)"
+    }
+}
