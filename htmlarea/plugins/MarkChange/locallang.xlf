@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.0" xmlns:t3="http://typo3.org/schemas/xliff">
+	<file t3:id="1461925458" source-language="en" datatype="plaintext" original="messages" date="2016-04-29T10:24:18Z" product-name="rte_plus">
+		<header/>
+		<body>
+			<trans-unit id="CharacterMapTooltip" xml:space="preserve">
+				<source>Insert special character</source>
+			</trans-unit>
+			<trans-unit id="MarkChange-Tooltip" xml:space="preserve">
+				<source>Mark text as DELeted or INSerted</source>
+			</trans-unit>
+			<trans-unit id="Insert special character" xml:space="preserve">
+				<source>Insert special character</source>
+			</trans-unit>
+			<trans-unit id="general" xml:space="preserve">
+				<source>General</source>
+			</trans-unit>
+			<trans-unit id="mathematical" xml:space="preserve">
+				<source>Mathematical</source>
+			</trans-unit>
+			<trans-unit id="graphical" xml:space="preserve">
+				<source>Shapes and arrows</source>
+			</trans-unit>
+			<trans-unit id="HTML value:" xml:space="preserve">
+				<source>HTML value:</source>
+			</trans-unit>
+			<trans-unit id="Close" xml:space="preserve">
+				<source>Close</source>
+			</trans-unit>
+		</body>
+	</file>
+</xliff>

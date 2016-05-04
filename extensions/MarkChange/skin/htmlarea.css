@@ -1,0 +1,5 @@
+/* Selectors for the Mark Changes extension of htmlArea RTE */
+.htmlarea-action-markchange-edit {
+	background-image: url('images/markchange.gif') !important;
+	background-position: 0 0 !important;
+}

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.0" xmlns:t3="http://typo3.org/schemas/xliff">
+	<file t3:id="1461925458" source-language="en" datatype="plaintext" original="messages" date="2016-04-29T10:24:18Z" product-name="rte_plus">
+		<header/>
+		<body>
+			<trans-unit id=".alttitle" xml:space="preserve">
+				<source>htmlArea RTE "Mark Change"</source>
+			</trans-unit>
+			<trans-unit id=".description" xml:space="preserve">
+				<source>The "Mark Change" dialogue allows to tag changes as del or ins and add a timestamp to it.</source>
+			</trans-unit>
+			<trans-unit id=".details" xml:space="preserve">
+				<source>Clicking the "Mark Change" icon in the RTE tool bar opens a dialogue that allows to chose if the selected text has been inserted or deleted and add a timestamp to the tag.</source>
+			</trans-unit>
+			<trans-unit id=".image" xml:space="preserve">
+				<source>EXT:rte_plus/extensions/MarkChange/skin/images/markchange.gif</source>
+				<note from="developer">This string contains an internal text, which must not be changed. Just copy the original text into the translation field. For more information have a look at the Tutorial.</note>
+			</trans-unit>
+			<trans-unit id=".image_descr" xml:space="preserve">
+				<source>"Mark Change" icon in the editor tool bar.</source>
+			</trans-unit>
+		</body>
+	</file>
+</xliff>
