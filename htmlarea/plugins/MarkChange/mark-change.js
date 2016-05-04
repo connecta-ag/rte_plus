@@ -63,9 +63,13 @@ HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
 			typeAhead: true,
 			triggerAction: 'all',
 			forceSelection: true,
-			mode: 'local'
+			mode: 'local',
+			valueField: 'value',
+			displayField: 'text',
+			helpIcon: true,
+			tpl: '<tpl for="."><div ext:qtip="{value}" style="text-align:left;font-size:11px;" class="x-combo-list-item">{text}</div></tpl>'
 		}
-	}, 
+	},
 	
 	/*
 	 * The list of buttons added by this plugin
@@ -86,10 +90,17 @@ HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
 			// Could be a button or its hotkey
 		var buttonId = this.translateHotKey(id);
 		buttonId = buttonId ? buttonId : id;
+
+		// Get the parent element of the current selection
+		// CAG TODO: find out if we really need the parent or maybe just the selection itself
+		this.element = this.editor.getSelection().getParentElement();
+
+		console.log('CAG: onButtonPress executed');
+		console.log(this.element);
 		
 		this.openDialogue(
 			buttonId,
-			'Mark Change',
+			'Mark Change', // TODO: localize!
 			this.getWindowDimensions(
 				{
 					width: 350,
@@ -170,17 +181,41 @@ HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
 						//title: this.localize('video'), // TODO: localize later
 						title: 'Änderung markieren',
 						defaultType: 'textfield',
-						items: 	{
+
+						items: {
+
 							xtype: 'fieldset',
 							defaultType: 'textfield',
-							labelWidth: 100,
+							labelWidth: 80,
+							autoHeight: true,
+
+							// TODO: localize all boxLabels, labels, etc.
 							items: [
 								{
-									title: 'timestamp',
-									itemId: 'timestamp',
-									//fieldLabel: this.localize('url'), // TODO: localize later
+									xtype: 'radio',
+									fieldLabel: 'Modus',
+									boxLabel: 'Als <strong>neu</strong> markieren',
+									name: 'mode',
+									inputValue: 'ins',
+									checked: true
+		            },
+								{
+									xtype: 'radio',
+									fieldLabel: '',
+									labelSeparator: '',
+									boxLabel: 'Als <strong>entfernt</strong> markieren',
+									name: 'mode',
+									inputValue: 'del'
+								},
+								{
+									xtype: 'datefield',
 									fieldLabel: 'Zeitpunkt',
-									value: ''
+									itemId: 'timestamp',
+									name: 'timestamp',
+									format: 'd.m.Y H:i',
+									value: new Date(),
+									width: 180
+
 								}/*,
 								{
 									itemId: 'width',
@@ -230,6 +265,49 @@ HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
 		});
 		this.show();
 	},
+
+
+	/*
+	 * This function builds the select dropdown for the mode (ins / del)
+	 *
+	 * @param	string		fieldName: the name of the field
+	 * @param	string		fieldLabel: the label for the field
+	 * @param	string		cshKey: the csh key
+	 * 
+	 * // CAG TODO: check if arguments are really needed
+	 *
+	 * @return	object		the style selection field object
+	 */
+	buildModeSelectField: function () {
+
+		return {
+			xtype: 'selectfield',
+			label: 'Modus',
+			options: [
+				{text: 'First Option', value: 'first'},
+				{text: 'Second Option', value: 'second'},
+				{text: 'Third Option', value: 'third'}
+			]
+		};
+
+	},
+	// buildModeSelectField: function (fieldName, fieldLabel, cshKey) {
+	// 	return new Ext.form.ComboBox(Ext.apply({
+	// 		xtype: 'combo',
+	// 		itemId: fieldName,
+	// 		//fieldLabel: this.getHelpTip(fieldLabel, cshKey), // TODO: localize
+	// 		fieldLabel: 'Modus',
+	// 		width: 200,
+	// 		store: new Ext.data.ArrayStore({
+	// 			autoDestroy:  true,
+	// 			fields: [ { name: 'text'}, { name: 'value'} ],
+	// 			data: [['Als \'neu\' markieren', 'ins'], ['Als \'gelöscht\' markieren', 'del']] // TODO: localize
+	// 		})
+	// 		}, {
+	// 		//tpl: '<tpl for="."><div ext:qtip="{value}" style="{style}text-align:left;font-size:11px;" class="x-combo-list-item">{text}</div></tpl>'
+	// 		}, this.configDefaults['combo']
+	// 	));
+	// },
 
 
 	/**
