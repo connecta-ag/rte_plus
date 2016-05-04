@@ -152,6 +152,8 @@ HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
 	 * @return	void
 	 */
 	openDialogue: function (buttonId, title, dimensions) {
+
+		var markedElement = null; // TODO: maybe fill this? Maybe not?
 		
 		this.dialog = new Ext.Window({
 			title: 'Änderung markieren', // TODO: localize
@@ -260,7 +262,8 @@ HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
 				],
 			},
 			buttons: [
-				this.buildButtonConfig('OK', this.onOk)
+				//this.buildButtonConfig('OK', this.okHandler)
+				this.buildButtonsConfig(markedElement, this.okHandler, this.deleteHandler)
 			]
 		});
 		this.show();
@@ -326,7 +329,62 @@ HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
 		}
 		return markedElement;
 	},
-	
+
+	/*
+	 * Build the dialogue buttons config
+	 *
+	 * @param	object		element: the element being edited, if any
+	 * @param	function	okHandler: the handler for the ok button
+	 * @param	function	deleteHandler: the handler for the delete button
+	 *
+	 * @return	object		the buttons configuration
+	 */
+	buildButtonsConfig: function (element, okHandler, deleteHandler) {
+		var buttonsConfig = [this.buildButtonConfig('OK', okHandler)];
+
+		if (element) {
+			buttonsConfig.push(this.buildButtonConfig('Delete', deleteHandler));
+		}
+		buttonsConfig.push(this.buildButtonConfig('Cancel', this.onCancel));
+		
+		return buttonsConfig;
+	},
+
+	/*
+	 * Handler when the ok button is pressed
+	 */
+	okHandler: function (button, event) {
+
+		this.restoreSelection();
+		console.log('okHandler clicked');
+
+		// var tab = this.dialog.findByType('tabpanel')[0].getActiveTab();
+		// var type = tab.getItemId();
+		// var languageSelector = tab.find('itemId', 'language');
+		// var language = languageSelector && languageSelector.length > 0 ? languageSelector[0].getValue() : '';
+		// var termSelector = tab.find('itemId', 'termSelector');
+		// var term = termSelector && termSelector.length > 0 ? termSelector[0].getValue() : '';
+		// var abbrSelector = tab.find('itemId', 'abbrSelector');
+		// var useTermField = tab.find('itemId', 'useTerm');
+		
+		this.close();
+
+	}, // end function okHandler()
+
+	/*
+	 * Handler when the delete button is pressed
+	 */
+	deleteHandler: function (button, event) {
+
+		this.restoreSelection();
+		var abbr = this.params.abbr;
+		if (abbr) {
+			this.editor.getDomNode().removeMarkup(abbr);
+		}
+		this.close();
+		event.stopEvent();
+
+	}, // end function deleteHandler()
 	
 	/*
 	 * Reset focus on the the current selection, if at all possible
