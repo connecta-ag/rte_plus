@@ -87,16 +87,26 @@ HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
 	 * @return	boolean		false if action is completed
 	 */
 	onButtonPress: function (editor, id) {
-			// Could be a button or its hotkey
+
+		// Could be a button or its hotkey
 		var buttonId = this.translateHotKey(id);
 		buttonId = buttonId ? buttonId : id;
 
+		// base info / data for our content to be marked
+		var elementToTag = this.getCurrentElement();
+		// TODO: really get surrounding tag if it's existing
+		this.params = {
+			changeToBeTagged: elementToTag,
+			//dataTimestamp: !Ext.isEmpty(elementToTag) ? elementToTag.getAttribute('data-timestamp') : '',
+			text: !Ext.isEmpty(elementToTag) ? elementToTag.innerHTML : this.editor.getSelection().getHtml()
+		};
+
 		// Get the parent element of the current selection
 		// CAG TODO: find out if we really need the parent or maybe just the selection itself
-		this.element = this.editor.getSelection().getParentElement();
+		//this.element = this.editor.getSelection().getParentElement();
 
 		console.log('CAG: onButtonPress executed');
-		console.log(this.element);
+		console.log(this.elementToTag);
 		
 		this.openDialogue(
 			buttonId,
@@ -294,6 +304,7 @@ HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
 		};
 
 	},
+
 	// buildModeSelectField: function (fieldName, fieldLabel, cshKey) {
 	// 	return new Ext.form.ComboBox(Ext.apply({
 	// 		xtype: 'combo',
@@ -318,7 +329,7 @@ HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
 	 *
 	 * @return object the element or null
 	 */
-	getCurrentMarkedElement: function() {
+	getCurrentElement: function() {
 		var markedElement = this.editor.getSelection().getParentElement();
 		// Working around Safari issue
 		if (!markedElement && this.editor.statusBar && this.editor.statusBar.getSelection()) {
@@ -358,6 +369,11 @@ HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
 		this.restoreSelection();
 		console.log('okHandler clicked');
 
+		var mode = 'ins'; // TODO: make this dynamic depending on the radio selection (ins, del)
+
+		
+
+
 		// var tab = this.dialog.findByType('tabpanel')[0].getActiveTab();
 		// var type = tab.getItemId();
 		// var languageSelector = tab.find('itemId', 'language');
@@ -366,8 +382,29 @@ HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
 		// var term = termSelector && termSelector.length > 0 ? termSelector[0].getValue() : '';
 		// var abbrSelector = tab.find('itemId', 'abbrSelector');
 		// var useTermField = tab.find('itemId', 'useTerm');
-		
+		console.log(this.params);
+
+		// do we have a plaintext (not yet tagged)
+		if (!this.params.changeToBeTagged) {
+
+			var changeTag = this.editor.document.createElement(mode);
+
+			// TODO: get the real timestamp from the datefield
+			changeTag.setAttribute('data-timestamp', '123 ts yo!');
+			console.log(changeTag);
+
+			// let's add the selected text and wrap it in our change tag
+			changeTag.innerHTML = this.params.text;
+			this.editor.getSelection().insertNode(changeTag);
+
+		} else { // or do we have an already tagged text to deal with
+
+			var changeTag = this.params.changeToBeTagged;
+
+		}
+
 		this.close();
+		event.stopEvent();
 
 	}, // end function okHandler()
 
@@ -377,9 +414,9 @@ HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
 	deleteHandler: function (button, event) {
 
 		this.restoreSelection();
-		var abbr = this.params.abbr;
-		if (abbr) {
-			this.editor.getDomNode().removeMarkup(abbr);
+		var elementToDelete = this.params.changeToBeTagged;
+		if (elementToDelete) {
+			this.editor.getDomNode().removeMarkup(elementToDelete);
 		}
 		this.close();
 		event.stopEvent();

@@ -8,3 +8,6 @@ RTE.default.hideButtons := removeFromList(deletedtext, insertedtext, editelement
 // allowed/denied tags
 RTE.default.proc.allowTags := addToList(del, ins)
 RTE.default.proc.denyTags := removeFromList(del, ins)
+
+// allowed attributes
+RTE.default.proc.entryHTMLparser_db.tags.ins.allowedAttribs := addToList(data-timestamp)
