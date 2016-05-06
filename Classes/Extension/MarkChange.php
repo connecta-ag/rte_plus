@@ -21,6 +21,8 @@ use TYPO3\CMS\Rtehtmlarea\RteHtmlAreaApi;
  * Mark Changes extension for htmlArea RTE
  *
  * @author Jochen Rieger <j.rieger@connecta.ag>
+ * @author Kai Groetenhardt <k.groetenhardt@connecta.ag>
+ *
  */
 class MarkChange extends \TYPO3\CMS\Rtehtmlarea\RteHtmlAreaApi {
 

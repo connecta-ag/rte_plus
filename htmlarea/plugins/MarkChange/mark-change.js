@@ -23,9 +23,9 @@ HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
 		 */
 		var pluginInformation = {
 			version		: '1.0',
-			developer	: 'Jochen Rieger',
+			developer	: 'Jochen Rieger, Kai Groethenhardt',
 			developerUrl	: 'http://www.connecta.ag/',
-			copyrightOwner	: 'Jochen Rieger',
+			copyrightOwner	: 'Connecta AG',
 			sponsor		: 'Connecta AG',
 			sponsorUrl	: 'http://www.connecta.ag',
 			license		: 'GPL'
