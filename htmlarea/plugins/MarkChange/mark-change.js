@@ -253,6 +253,16 @@ HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
 
 		this.restoreSelection();
 
+		/* Marking of multiple paragraphs leads to strange beahaviour, so we don't want that. */
+		if (this.editor.getSelection().getHtml().toLowerCase().indexOf('</p>') != -1) {
+			TYPO3.Dialog.InformationDialog({
+				title: "Markierung nicht möglich",
+				msg: "Markierungen sind nur innerhalb eines Absatzes möglich. Möchten Sie mehrere Absätze markieren, markieren Sie diese bitte einzeln.",
+				fn: function () {  }
+			});
+			return;
+		}
+
 		/* Get the selected mode in the dialog form. */
 		var mode = 'ins';
 		var modeSelectors = this.dialog.find('name', 'mode');
