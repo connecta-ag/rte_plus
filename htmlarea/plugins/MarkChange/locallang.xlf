@@ -27,6 +27,9 @@
 			<trans-unit id="Close" xml:space="preserve">
 				<source>Close</source>
 			</trans-unit>
+			<trans-unit id="dialog.title" xml:space="preserve">
+                <source>Änderung markieren</source>
+            </trans-unit>
 		</body>
 	</file>
 </xliff>

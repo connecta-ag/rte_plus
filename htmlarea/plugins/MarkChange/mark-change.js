@@ -14,16 +14,32 @@
  * Mark Change Plugin for TYPO3 htmlArea RTE
  */
 HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
+
 	/*
-	 * This function gets called by the class constructor
+	 * The list of buttons added to the RTE toolbar by this plugin
 	 */
+	buttons: [
+		['MarkChange', null, 'mark-change']
+	],
+
+	/**
+	 * Array to store values for the dialog form.
+	 */
+	params: {},
+
+	/**
+	 * This function gets called by the class constructor
+	 *
+	 * @param 	Object	editor
+	 * @returns {boolean}
+     */
 	configurePlugin : function(editor) {
 		/*
 		 * Registering plugin "About" information
 		 */
 		var pluginInformation = {
 			version		: '1.0',
-			developer	: 'Jochen Rieger, Kai Groethenhardt',
+			developer	: 'Jochen Rieger, Kai Groetenhardt',
 			developerUrl	: 'http://www.connecta.ag/',
 			copyrightOwner	: 'Connecta AG',
 			sponsor		: 'Connecta AG',
@@ -51,35 +67,10 @@ HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
 		}
 		
 		return true;
-	},
+	}, // end function configurePlugin()
 
-	/*
-	 * Sets of default configuration values for dialogue form fields
-	 */
-	configDefaults: {
-		combo: {
-			editable: true,
-			selectOnFocus: true,
-			typeAhead: true,
-			triggerAction: 'all',
-			forceSelection: true,
-			mode: 'local',
-			valueField: 'value',
-			displayField: 'text',
-			helpIcon: true,
-			tpl: '<tpl for="."><div ext:qtip="{value}" style="text-align:left;font-size:11px;" class="x-combo-list-item">{text}</div></tpl>'
-		}
-	},
-	
-	/*
-	 * The list of buttons added by this plugin
-	 */
-	buttons: [
-		['MarkChange', null, 'mark-change']
-	],
-
-	/*
-	 * This function gets called when the button was pressed.
+	/**
+	 * This function gets called when the button "MarkChange" was pressed in the RTE toolbar.
 	 *
 	 * @param	object		editor: the editor instance
 	 * @param	string		id: the button id or the key
@@ -92,68 +83,62 @@ HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
 		var buttonId = this.translateHotKey(id);
 		buttonId = buttonId ? buttonId : id;
 
-		// base info / data for our content to be marked
-		var elementToTag = this.getCurrentElement();
-		// TODO: really get surrounding tag if it's existing
 		this.params = {
-			changeToBeTagged: elementToTag,
-			//dataTimestamp: !Ext.isEmpty(elementToTag) ? elementToTag.getAttribute('data-timestamp') : '',
-			text: !Ext.isEmpty(elementToTag) ? elementToTag.innerHTML : this.editor.getSelection().getHtml()
+			markAvailable: false,
+			dataTimestamp: "",
+			mode: "ins",
 		};
 
-		// Get the parent element of the current selection
-		// CAG TODO: find out if we really need the parent or maybe just the selection itself
-		//this.element = this.editor.getSelection().getParentElement();
+		var node = this.getSelectedNode();
+		if (node != null && this.isAllowedNode(node)) {
+			/* The currently selected node is an <ins> or <del> node, so we can read the attributes to fill the dialog
+			 * form. */
+			this.params.markAvailable = true;
+			this.params.mode = node.nodeName.toLowerCase();
+			this.params.dataTimestamp = node.getAttribute("data-timestamp");
+		} else if (!this.editor.getSelection().isEmpty()) {
+			/* We only got a text, but maybe one of our nodes in there. */
+			var text = this.editor.getSelection().getHtml();
+			if (text && text != null) {
+				var tagname = "ins";
+				var offset = text.toLowerCase().indexOf('<' + tagname);
+				if (offset == -1) {
+					tagname = "del";
+					offset = text.toLowerCase().indexOf('<' + tagname);
+				}
+				if (offset != -1) {
+					/* Yes, we found one of our nodes. We now have to extract the data. */
+					var ATagContent = text.substring(offset);
+					offset = ATagContent.indexOf('>');
+					ATagContent = ATagContent.substring(0, offset+1) + "</" + tagname + ">";
+					var parser = new DOMParser();
+					var xmlDoc = parser.parseFromString(ATagContent,"text/xml");
+					var timestamp = xmlDoc.childNodes[0].getAttribute("data-timestamp");
 
-		console.log('CAG: onButtonPress executed');
-		console.log(this.elementToTag);
-		
-		this.openDialogue(
+					/* Save the data for the dialog form. */
+					this.params.markAvailable = true;
+					this.params.mode = tagname;
+					this.params.dataTimestamp = timestamp;
+				}
+			}
+		}
+
+		this.openDialog(
 			buttonId,
 			'Mark Change', // TODO: localize!
 			this.getWindowDimensions(
 				{
 					width: 350,
-					height: 560
+					height: 210,
 				},
 				buttonId
 			)
 		);
 		return false;
-	},
+	}, // end function onButtonPress()
 
-
-	/*
-	 * Build the configuration of the the tab items
-	 *
-	 * @return	array	the configuration array of tab items
-	 */
-	// CAG JR / TODO (maybe): could be useful one day as an ExtJS templating example
-	// otherwise: remove again
-	buildTabItems: function () {
-		var tabItems = [];
-		Ext.iterate(this.maps, function (id, map) {
-			tabItems.push({
-				xtype: 'box',
-				cls: 'character-map',
-				title: this.localize(id),
-				itemId: id,
-				tpl: new Ext.XTemplate(
-					'<tpl for="."><a href="#" class="character" hidefocus="on" ext:qtitle="<span>&</span>{1};" ext:qtip="{2}">{0}</a></tpl>'
-				),
-				listeners: {
-					render: {
-						fn: this.renderMap,
-						scope: this
-					}
-				}
-			});
-		}, this);
-		return tabItems;
-	},
-
-	
-	/* Open the dialogue window
+	/**
+	 * Open the dialog window
 	 *
 	 * @param	string		buttonId: the button id
 	 * @param	string		title: the window title
@@ -161,16 +146,29 @@ HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
 	 *
 	 * @return	void
 	 */
-	openDialogue: function (buttonId, title, dimensions) {
+	openDialog: function (buttonId, title, dimensions) {
 
-		var markedElement = null; // TODO: maybe fill this? Maybe not?
-		
+		/* Prepare the date to show in the dialog. */
+		var currentDate = null;
+		if (this.params.dataTimestamp != "") {
+			currentDate = this.params.dataTimestamp
+		} else {
+			currentDate = new Date();
+		}
+
+		/* Figure out which mode should be selected. */
+		var modeInsMarked = true;
+		if (this.params.mode == "del") {
+			modeInsMarked = false;
+		}
+
+		/* Create the dialog. */
 		this.dialog = new Ext.Window({
-			title: 'Änderung markieren', // TODO: localize
+			title: this.localize('dialog.title'),
 			cls: 'htmlarea-window',
 			border: false,
 			width: dimensions.width,
-			height: '300',
+			height: dimensions.height,
 				// As of ExtJS 3.1, JS error with IE when the window is resizable
 			resizable: !Ext.isIE,
 			iconCls: this.getButton(buttonId).iconCls,
@@ -182,253 +180,203 @@ HTMLArea.MarkChange = Ext.extend(HTMLArea.Plugin, {
 				}
 			},
 			items: {
-				
-				xtype: 'tabpanel',
-				height: 80,
-				activeTab: 0,
-				forceLayout: true,
-				layoutOnTabChange: true,
+				xtype: 'fieldset',
+				defaultType: 'textfield',
+				labelWidth: 80,
+				autoHeight: true,
+
+				// TODO: localize all boxLabels, labels, etc.
 				items: [
 					{
-						//title: this.localize('video'), // TODO: localize later
-						title: 'Änderung markieren',
-						defaultType: 'textfield',
-
-						items: {
-
-							xtype: 'fieldset',
-							defaultType: 'textfield',
-							labelWidth: 80,
-							autoHeight: true,
-
-							// TODO: localize all boxLabels, labels, etc.
-							items: [
-								{
-									xtype: 'radio',
-									fieldLabel: 'Modus',
-									boxLabel: 'Als <strong>neu</strong> markieren',
-									name: 'mode',
-									inputValue: 'ins',
-									checked: true
-		            },
-								{
-									xtype: 'radio',
-									fieldLabel: '',
-									labelSeparator: '',
-									boxLabel: 'Als <strong>entfernt</strong> markieren',
-									name: 'mode',
-									inputValue: 'del'
-								},
-								{
-									xtype: 'datefield',
-									fieldLabel: 'Zeitpunkt',
-									itemId: 'timestamp',
-									name: 'timestamp',
-									format: 'd.m.Y H:i',
-									value: new Date(),
-									width: 180
-
-								}/*,
-								{
-									itemId: 'width',
-									fieldLabel: this.localize('width'),
-									value: 200
-								},
-								{
-									itemId: 'height',
-									fieldLabel: this.localize('height'),
-									value: 200
-								}*/
-							]
-						}
-					}/*,
+						xtype: 'radio',
+						fieldLabel: 'Modus',
+						boxLabel: 'Als <strong>neu</strong> markieren',
+						name: 'mode',
+						inputValue: 'ins',
+						checked: modeInsMarked,
+					},
 					{
-						title: this.localize('options'),
-						defaultType: 'textfield',
-						items: {
-							xtype: 'fieldset',
-							defaultType: 'textfield',
-							labelWidth: 100,
-							items: [
-								{
-									itemId: 'start',
-									fieldLabel: this.localize('starttime'),
-									value: 1
-								},
-								{
-									itemId: 'end',
-									fieldLabel: this.localize('endtime'),
-									value: 2
-								},
-								{
-									xtype: 'checkbox',
-									itemId: 'autoplay',
-									fieldLabel: this.localize('autoplay'),
-									checked: true
-								}
-							]
-						}
-					}*/
-				],
+						xtype: 'radio',
+						fieldLabel: '',
+						labelSeparator: '',
+						boxLabel: 'Als <strong>entfernt</strong> markieren',
+						name: 'mode',
+						inputValue: 'del',
+						checked: !modeInsMarked,
+					},
+					{
+						xtype: 'datefield',
+						fieldLabel: 'Zeitpunkt',
+						itemId: 'timestamp',
+						name: 'timestamp',
+						format: 'd.m.Y H:i',
+						value: currentDate,
+						width: 180
+
+					},
+				]
 			},
 			buttons: [
-				//this.buildButtonConfig('OK', this.okHandler)
-				this.buildButtonsConfig(markedElement, this.okHandler, this.deleteHandler)
+				this.buildButtonsConfig(this.okHandler, this.deleteHandler)
 			]
 		});
 		this.show();
-	},
-
-
-	/*
-	 * This function builds the select dropdown for the mode (ins / del)
-	 *
-	 * @param	string		fieldName: the name of the field
-	 * @param	string		fieldLabel: the label for the field
-	 * @param	string		cshKey: the csh key
-	 * 
-	 * // CAG TODO: check if arguments are really needed
-	 *
-	 * @return	object		the style selection field object
-	 */
-	buildModeSelectField: function () {
-
-		return {
-			xtype: 'selectfield',
-			label: 'Modus',
-			options: [
-				{text: 'First Option', value: 'first'},
-				{text: 'Second Option', value: 'second'},
-				{text: 'Third Option', value: 'third'}
-			]
-		};
-
-	},
-
-	// buildModeSelectField: function (fieldName, fieldLabel, cshKey) {
-	// 	return new Ext.form.ComboBox(Ext.apply({
-	// 		xtype: 'combo',
-	// 		itemId: fieldName,
-	// 		//fieldLabel: this.getHelpTip(fieldLabel, cshKey), // TODO: localize
-	// 		fieldLabel: 'Modus',
-	// 		width: 200,
-	// 		store: new Ext.data.ArrayStore({
-	// 			autoDestroy:  true,
-	// 			fields: [ { name: 'text'}, { name: 'value'} ],
-	// 			data: [['Als \'neu\' markieren', 'ins'], ['Als \'gelöscht\' markieren', 'del']] // TODO: localize
-	// 		})
-	// 		}, {
-	// 		//tpl: '<tpl for="."><div ext:qtip="{value}" style="{style}text-align:left;font-size:11px;" class="x-combo-list-item">{text}</div></tpl>'
-	// 		}, this.configDefaults['combo']
-	// 	));
-	// },
-
-
-	/**
-	 * Get the current marked element, if any is selected
-	 *
-	 * @return object the element or null
-	 */
-	getCurrentElement: function() {
-		var markedElement = this.editor.getSelection().getParentElement();
-		// Working around Safari issue
-		if (!markedElement && this.editor.statusBar && this.editor.statusBar.getSelection()) {
-			markedElement = this.editor.statusBar.getSelection();
-		}
-		if (!markedElement || !/^(ins|del)$/i.test(markedElement.nodeName)) {
-			markedElement = this.editor.getSelection().getFirstAncestorOfType(['ins', 'del']);
-		}
-		return markedElement;
-	},
+	}, // end function openDialog()
 
 	/*
 	 * Build the dialogue buttons config
 	 *
-	 * @param	object		element: the element being edited, if any
+	 * @param	Object		element: the element being edited, if any
 	 * @param	function	okHandler: the handler for the ok button
 	 * @param	function	deleteHandler: the handler for the delete button
 	 *
-	 * @return	object		the buttons configuration
+	 * @return	Object		the buttons configuration
 	 */
-	buildButtonsConfig: function (element, okHandler, deleteHandler) {
+	buildButtonsConfig: function (okHandler, deleteHandler) {
 		var buttonsConfig = [this.buildButtonConfig('OK', okHandler)];
 
-		if (element) {
+		if (this.params.markAvailable) {
 			buttonsConfig.push(this.buildButtonConfig('Delete', deleteHandler));
 		}
 		buttonsConfig.push(this.buildButtonConfig('Cancel', this.onCancel));
 		
 		return buttonsConfig;
-	},
+	}, // end function buildButtonsConfig()
 
-	/*
-	 * Handler when the ok button is pressed
-	 */
+	/**
+	 * Handler when the ok button is pressed.
+	 *
+	 * @param 	Object	button
+	 * @param 	Object	event
+     */
 	okHandler: function (button, event) {
 
 		this.restoreSelection();
-		console.log('okHandler clicked');
 
-		var mode = 'ins'; // TODO: make this dynamic depending on the radio selection (ins, del)
-
-		
-
-
-		// var tab = this.dialog.findByType('tabpanel')[0].getActiveTab();
-		// var type = tab.getItemId();
-		// var languageSelector = tab.find('itemId', 'language');
-		// var language = languageSelector && languageSelector.length > 0 ? languageSelector[0].getValue() : '';
-		// var termSelector = tab.find('itemId', 'termSelector');
-		// var term = termSelector && termSelector.length > 0 ? termSelector[0].getValue() : '';
-		// var abbrSelector = tab.find('itemId', 'abbrSelector');
-		// var useTermField = tab.find('itemId', 'useTerm');
-		console.log(this.params);
-
-		// do we have a plaintext (not yet tagged)
-		if (!this.params.changeToBeTagged) {
-
-			var changeTag = this.editor.document.createElement(mode);
-
-			// TODO: get the real timestamp from the datefield
-			changeTag.setAttribute('data-timestamp', '123 ts yo!');
-			console.log(changeTag);
-
-			// let's add the selected text and wrap it in our change tag
-			changeTag.innerHTML = this.params.text;
-			this.editor.getSelection().insertNode(changeTag);
-
-		} else { // or do we have an already tagged text to deal with
-
-			var changeTag = this.params.changeToBeTagged;
-
+		/* Get the selected mode in the dialog form. */
+		var mode = 'ins';
+		var modeSelectors = this.dialog.find('name', 'mode');
+		for (i = 0; i < modeSelectors.length; i++) {
+			var currentModeSelector = modeSelectors[i];
+			if (currentModeSelector.checked) {
+				mode = currentModeSelector.inputValue;
+				break;
+			}
 		}
+
+		/* Get the selected date. */
+		var timestampInput = this.dialog.find('name', 'timestamp')[0];
+
+		/* Cleanup the selecteion (remove all <ins> and <del> nodes) */
+		var range = null;
+		this.restoreSelection();
+		var node = this.getSelectedNode();
+		range = this.editor.getSelection().createRange();
+		var bookMark = this.editor.getBookMark().get(range);
+		this.cleanSelection(node, range);
+		range = this.editor.getBookMark().moveTo(bookMark);
+		this.editor.getSelection().selectRange(range);
+
+		/* Create a new <ins> or <del> node with the given configuration and add it to the editor. */
+		var changeTag = this.editor.document.createElement(mode);
+		changeTag.setAttribute('data-timestamp', timestampInput.value);
+		changeTag.innerHTML = this.editor.getSelection().getHtml();
+		//this.editor.getSelection().insertNode(changeTag);
+		this.editor.getSelection().insertHtml(changeTag.outerHTML);
+
+		//this.editor.getSelection().execCommand('insertText', false, changeTag.outerHTML);
 
 		this.close();
 		event.stopEvent();
 
 	}, // end function okHandler()
 
-	/*
-	 * Handler when the delete button is pressed
-	 */
-	deleteHandler: function (button, event) {
+	/**
+	 * Clean up all ins and del tags intesecting with the range in the given node.
+	 *
+	 * @param 	Object	node
+	 * @param 	Object	range
+     */
+	cleanSelection: function(node, range) {
+		if (this.isAllowedNode(node)) {
+			var intersection = false;
+			if (!HTMLArea.isIEBeforeIE9) {
+				this.editor.focus();
+				intersection = HTMLArea.DOM.rangeIntersectsNode(range, node);
+			} else {
+				if (this.editor.getSelection().getType() === 'Control') {
+					// we assume an image is selected
+					intersection = true;
+				} else {
+					var nodeRange = this.editor.document.body.createTextRange();
+					nodeRange.moveToElementText(node);
+					intersection = range.inRange(nodeRange) || ((range.compareEndPoints('StartToStart', nodeRange) > 0) && (range.compareEndPoints('StartToEnd', nodeRange) < 0)) || ((range.compareEndPoints('EndToStart', nodeRange) > 0) && (range.compareEndPoints('EndToEnd', nodeRange) < 0));
+				}
+			}
+			if (intersection) {
+				while (node.firstChild) {
+					node.parentNode.insertBefore(node.firstChild, node);
+				}
+				node.parentNode.removeChild(node);
 
-		this.restoreSelection();
-		var elementToDelete = this.params.changeToBeTagged;
-		if (elementToDelete) {
-			this.editor.getDomNode().removeMarkup(elementToDelete);
+			}
+		} else {
+			var child = node.firstChild;
+			var nextSibling;
+			while (child) {
+				// Save next sibling as child may be removed
+				nextSibling = child.nextSibling;
+				if (child.nodeType === HTMLArea.DOM.ELEMENT_NODE || child.nodeType === HTMLArea.DOM.DOCUMENT_FRAGMENT_NODE) {
+					this.cleanSelection(child, range);
+				}
+				child = nextSibling;
+			}
 		}
+	},
+
+	/**
+	 * Handler when the delete button is pressed.
+	 *
+	 * @param 	Object	button
+	 * @param 	Object	event
+     */
+	deleteHandler: function (button, event) {
+		this.restoreSelection();
+		var node = this.getSelectedNode();
+		if (node != null && this.isAllowedNode(node)) {
+			this.editor.getSelection().selectNode(node);
+		}
+		var range = this.editor.getSelection().createRange();
+		this.cleanSelection(node, range);
+
 		this.close();
 		event.stopEvent();
 
 	}, // end function deleteHandler()
-	
-	/*
-	 * Reset focus on the the current selection, if at all possible
-	 *
-	 */
-	resetFocus: function () {
-		this.restoreSelection();
-	}
 
+	/**
+	 * Finds the selected <ins> or <del> node or the parent node of the selected area.
+	 *
+	 * @returns {Object}
+	 */
+	getSelectedNode: function () {
+		var node = this.editor.getSelection().getFirstAncestorOfType('ins');
+		if (node == null) {
+			node = this.editor.getSelection().getFirstAncestorOfType('del');
+		}
+		if (node == null) {
+			node = this.editor.getSelection().getParentElement();
+		}
+		return node;
+	},
+
+	/**
+	 * Checks if the given node is one of the allowed nodes. Allowed nodes are <ins> and <del>.
+	 *
+	 * @param 	Object		node
+	 * @return 	{boolean}
+	 */
+	isAllowedNode: function (node) {
+		return (/^ins$/i.test(node.nodeName) || /^del$/i.test(node.nodeName));
+	},
 });
