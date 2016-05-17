@@ -3,10 +3,6 @@
 RTE.default.showButtons := addToList(markchange)
 RTE.default.hideButtons := removeFromList(markchange)
 
-// CAG TODO: remove these lines again after finishing development
-RTE.default.showButtons := addToList(deletedtext, insertedtext, editelement, acronym, markchange)
-RTE.default.hideButtons := removeFromList(deletedtext, insertedtext, editelement, acronym, markchange)
-
 // let's make sure RTE will like our <del> and <ins> tags
 RTE.default.proc.allowTags := addToList(del, ins)
 RTE.default.proc.denyTags := removeFromList(del, ins)
