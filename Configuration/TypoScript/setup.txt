@@ -1,0 +1,9 @@
+module.tx_rteplus {
+    settings {
+        # Number of days after the markups get removed
+        maxMarkupAge = 1
+        markupFields {
+            tt_content = bodytext
+        }
+    }
+}

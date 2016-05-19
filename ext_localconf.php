@@ -17,3 +17,6 @@ $TYPO3_CONF_VARS['EXTCONF'][$rteExtKey]['plugins']['MarkChange'] = array();
 $TYPO3_CONF_VARS['EXTCONF'][$rteExtKey]['plugins']['MarkChange']['objectReference'] = '&CAG\\RtePlus\\Extension\\MarkChange';
 $TYPO3_CONF_VARS['EXTCONF'][$rteExtKey]['plugins']['MarkChange']['addIconsToSkin'] = 0;
 $TYPO3_CONF_VARS['EXTCONF'][$rteExtKey]['plugins']['MarkChange']['disableInFE'] = 1;
+
+// Register command controller.
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['extbase']['commandControllers'][] = 'CAG\RtePlus\Command\RtePlusCommandController';
