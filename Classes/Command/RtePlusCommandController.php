@@ -47,6 +47,7 @@ class RtePlusCommandController extends \TYPO3\CMS\Extbase\Mvc\Controller\Command
         );
 
         $this->dataHandler = $this->objectManager->get(\TYPO3\CMS\Core\DataHandling\DataHandler::class);
+        $this->dataHandler->start(null, null, $GLOBALS['BE_USER']);
 
         if (is_numeric($this->settings['beUserUid']) && $this->settings['beUserUid'] > 0) {
             $this->beUser = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Authentication\BackendUserAuthentication::class);
