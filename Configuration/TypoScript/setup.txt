@@ -5,5 +5,9 @@ module.tx_rteplus {
         markupFields {
             tt_content = bodytext
         }
+
+        # BE User that removes the ins and del tags. If no BE user is set, the content gets changed without BE user.
+        # If you specify a user, he or she needs permission to edit the contents defined in 'markupFields'.
+        beUserUid = 0
     }
 }
