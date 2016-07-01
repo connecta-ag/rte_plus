@@ -138,6 +138,27 @@ class RtePlusCommandController extends \TYPO3\CMS\Extbase\Mvc\Controller\Command
                                         . substr($text, $startTagEndPos, strlen($text) - $startTagEndPos);
                                 } else if ($tagName == self::$TAG_DEL) {
                                     /* If it's the delete tag, remove the tag and its content. */
+
+                                    $lineBreak = "\r\n";
+                                    $lineBreakLength = strlen($lineBreak);
+
+                                    /* Get the chars before the start tag. */
+                                    $charsBeforeStartTag = "";
+                                    if ($startTagStartPos >= $lineBreakLength) { // Check bounds.
+                                        $charsBeforeStartTag = substr($text, $startTagStartPos - $lineBreakLength, $lineBreakLength);
+                                    }
+
+                                    /* Get the chars after the end tag. */
+                                    $charsAfterEndTag = "";
+                                    if ($endTagEndPos + $lineBreakLength < strlen($text)) { // Check bounds.
+                                        $charsAfterEndTag = substr($text, $endTagEndPos , $lineBreakLength);
+                                    }
+
+                                    if (($charsBeforeStartTag == $lineBreak || $startTagStartPos === 0) && $charsAfterEndTag == $lineBreak) {
+                                        /* If the tag contains a complete paragraph, we want to delete the paragraph (represented via "\r\n"), too. */
+                                        $endTagEndPos = $endTagEndPos + $lineBreakLength;
+                                    }
+
                                     $text = substr($text, 0, $startTagStartPos)
                                         . substr($text, $endTagEndPos, strlen($text) - $endTagEndPos);
                                 }
