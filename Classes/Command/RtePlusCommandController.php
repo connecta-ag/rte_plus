@@ -70,13 +70,16 @@ class RtePlusCommandController extends \TYPO3\CMS\Extbase\Mvc\Controller\Command
             $recordsWithMarkups = $this->findRecordWithMarkups($tablename, $fields);
             foreach($recordsWithMarkups as $uid => $recordWithMarkups) {
                 foreach($recordWithMarkups as $fieldName => $fieldContent) {
-                    $newContent = $this->removeExpiredMarkups($fieldContent);
-                    if ($this->beUser !== null) {
-                        $data[$tablename][$uid][$fieldName] = $newContent;
-                        $this->dataHandler->start($data, null, $this->beUser);
-                        $this->dataHandler->process_datamap();
-                    } else {
-                        $this->dataHandler->updateDB($tablename, $uid, array($fieldName => $newContent));
+                    $removedMarkup = false; // Gets set to true by removeExpiredMarkups(...), if at least one markup was removed.
+                    $newContent = $this->removeExpiredMarkups($fieldContent, $removedMarkup);
+                    if ($removedMarkup) {
+                        if ($this->beUser !== null) {
+                            $data[$tablename][$uid][$fieldName] = $newContent;
+                            $this->dataHandler->start($data, null, $this->beUser);
+                            $this->dataHandler->process_datamap();
+                        } else {
+                            $this->dataHandler->updateDB($tablename, $uid, array($fieldName => $newContent));
+                        }
                     }
                 }
             }
@@ -87,9 +90,10 @@ class RtePlusCommandController extends \TYPO3\CMS\Extbase\Mvc\Controller\Command
      * Removes expired ins or del tags from given text.
      *
      * @param $text
+     * @param $removedMarkup Will be set to true, if at least one markup was removed.
      * @return string
      */
-    protected function removeExpiredMarkups($text) {
+    protected function removeExpiredMarkups($text, &$removedMarkup) {
         $tagNames = array(self::$TAG_INS, self::$TAG_DEL);
         foreach($tagNames as $tagName) {
             $startTagStartPos = 0;
@@ -127,6 +131,7 @@ class RtePlusCommandController extends \TYPO3\CMS\Extbase\Mvc\Controller\Command
 
                         if ($tstamp < strtotime("-" . $this->settings['maxMarkupAge'] . " day")) {
                             /* If the tag is expired, remove it. */
+                            $removedMarkup = true;
                             $endTagStartPos = strpos($text, "</" . $tagName, $startTagEndPos);
                             if ($endTagStartPos !== false) {
                                 $endTagEndPos = $endTagStartPos + strlen("</" . $tagName . ">");
