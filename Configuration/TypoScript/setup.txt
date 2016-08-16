@@ -13,3 +13,5 @@ module.tx_rteplus {
         beUserUid = 0
     }
 }
+
+plugin.tx_rteplus < module.tx_rteplus
