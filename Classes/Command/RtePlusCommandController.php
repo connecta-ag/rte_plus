@@ -192,6 +192,7 @@ class RtePlusCommandController extends \TYPO3\CMS\Extbase\Mvc\Controller\Command
         }
         $queryFields = "uid,".implode(",", $fields);
         $where = array();
+        $where[] = "deleted = 0";
         $tempOr = array();
         foreach ($fields as $field) {
             $tempOr[] = $field." LIKE '%<ins%'";
