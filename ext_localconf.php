@@ -10,6 +10,16 @@ if (!defined('TYPO3_MODE')) {
 		'<INCLUDE_TYPOSCRIPT: source="FILE:EXT:' . $_EXTKEY . '/Configuration/TsConfig/RteConfig.ts">'
 );
 
+\TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
+	'CAG.' . $_EXTKEY,	// Namespace
+	'RtePlus', // PluginName
+	array( // Actions
+		'RtePlus' => 'listChangedPages',
+	),
+	array( // NON CACHEABLE Actions
+		'RtePlus' => 'listChangedPages',
+	)
+);
 
 // Adding the extension to rtehtmlarea
 $rteExtKey = 'rtehtmlarea';
