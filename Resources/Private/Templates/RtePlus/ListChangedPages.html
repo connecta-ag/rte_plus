@@ -6,9 +6,9 @@
     </tr>
     <f:for each="{pages}" as="page">
         <tr>
-            <td><f:link.page pageUid="{page.parent.uid}">{page.parent.title}</f:link.page></td>
-            <td><f:link.page pageUid="{page.uid}">{page.title}</f:link.page></td>
-            <td><f:format.date format="d.m.Y">{page.newestDate}</f:format.date></td>
+            <td style="vertical-align: top;"><f:link.page pageUid="{page.parent.uid}">{page.parent.title}</f:link.page></td>
+            <td style="vertical-align: top;"><f:link.page pageUid="{page.uid}">{page.title}</f:link.page></td>
+            <td style="vertical-align: top; text-align: right;"><f:format.date format="d.m.Y">{page.newestDate}</f:format.date></td>
         </tr>
     </f:for>
 </table>
