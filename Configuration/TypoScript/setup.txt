@@ -1,4 +1,4 @@
-module.tx_rteplus {
+plugin.tx_rteplus {
     settings {
 
         # Number of days after the markups get removed
@@ -14,4 +14,4 @@ module.tx_rteplus {
     }
 }
 
-plugin.tx_rteplus < module.tx_rteplus
+module.tx_rteplus.settings < plugin.tx_rteplus.settings
