@@ -1,13 +1,13 @@
 <table class="rte-plus-changetable">
     <tr>
-        <th>Seitenbereich</th>
         <th>Seite</th>
-        <th>Änderungsdatum</th>
+        <th>Kategorie</th>
+        <th>Datum</th>
     </tr>
     <f:for each="{pages}" as="page">
         <tr>
-            <td style="vertical-align: top;"><f:link.page pageUid="{page.parent.uid}">{page.parent.title}</f:link.page></td>
             <td style="vertical-align: top;"><f:link.page pageUid="{page.uid}">{page.title}</f:link.page></td>
+            <td style="vertical-align: top;">{page.parent.title}</td>
             <td style="vertical-align: top; text-align: right;"><f:format.date format="d.m.Y">{page.newestDate}</f:format.date></td>
         </tr>
     </f:for>
